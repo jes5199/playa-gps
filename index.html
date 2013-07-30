@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html manifest="/playa-gps/cache_manifest.manifest">
+  <head>
+    <title>playa GPS</title>
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <link rel="apple-touch-icon" href="/playa-gps/littlemapbrc2013.png" />
+    <meta name = "viewport" content = "user-scalable=no, width=500">
+    <link rel="stylesheet" href="/playa-gps/add2home/add2home.css">
+    <script type="application/javascript" src="/playa-gps/add2home/add2home.js"></script>
+
+    <script type='text/javascript'>
+      //<![CDATA[
+  var rFeet   = 20895592;
+  var man_lat = 40.787000;
+  var man_lon = -119.2043;
+
+  var pixels_to_esplanade = 77;
+
+  var man_pavilion_size = 100; // radius. wild guess
+  var esplanade_feet = 2400;
+  var street_width_feet = 30;
+  var esplanade_block_depth_feet = 400;
+  var block_depth_feet = 200;
+
+  var facing_bearing = 0;
+
+  var theme = "cargo";
+  var streets = [
+    "Airstrip",
+    "Biggie Size",
+    "Consumer",
+    "Desiderata",
+    "Extraterrestrial",
+    "False Idol",
+    "GDP",
+    "Holy",
+    "Interstellar",
+    "John Frum",
+    "Kowtow",
+    "Laissez-faire",
+    "M",
+    "N",
+    "O",
+    "P",
+    "Q",
+    "R",
+    "S",
+    "T",
+    "U",
+    "V",
+    "W",
+    "X",
+    "Y",
+    "Z",
+  ];
+
+  // thanks to Chris Veness at http://www.movable-type.co.uk/scripts/latlong.html
+  function rhumb(R, lat1, lon1, lat2, lon2){
+    lat1 = lat1 * (Math.PI/180);
+    lon1 = lon1 * (Math.PI/180);
+    lat2 = lat2 * (Math.PI/180);
+    lon2 = lon2 * (Math.PI/180);
+
+    var dLat = (lat2-lat1);
+    var dLon = (lon2-lon1);
+
+    var dPhi = Math.log(Math.tan(lat2/2+Math.PI/4)/Math.tan(lat1/2+Math.PI/4));
+    var q = (!isNaN(dLat/dPhi)) ? dLat/dPhi : Math.cos(lat1);  // E-W line gives dPhi=0
+
+    // if dLon over 180° take shorter rhumb across 180° meridian:
+    if (Math.abs(dLon) > Math.PI) {
+      dLon = dLon>0 ? -(2*Math.PI-dLon) : (2*Math.PI+dLon);
+    }
+    var d = Math.sqrt(dLat*dLat + q*q*dLon*dLon) * R;
+    var brng = Math.atan2(dLon, dPhi);
+
+    return [d,brng];
+  }
+
+  function rhumb_dist(R, lat1, lon1, lat2, lon2){
+    var r = rhumb(R, lat1, lon1, lat2, lon2);
+    return r[0];
+  }
+
+  function rhumb_bearing(R, lat1, lon1, lat2, lon2){
+    var r = rhumb(R, lat1, lon1, lat2, lon2);
+    return r[1];
+  }
+
+  function ordinal(i){
+    if(i % 10 == 1){ return(i + "st"); }
+    if(i % 10 == 2){ return(i + "nd"); }
+    if(i % 10 == 3){ return(i + "rd"); }
+    return(i + "th");
+  }
+
+  var lat = man_lat;
+  var lon = man_lon;
+
+  function show_address(){
+    var distance_in_feet  = rhumb_dist( rFeet, lat, lon, man_lat, man_lon );
+    var compass_direction = (Math.PI / 2 ) - rhumb_bearing( rFeet, man_lat, man_lon, lat, lon );
+
+    var angle = compass_direction + (Math.PI / 4);
+
+    var playa_time_fractional = 3 - (6 * angle) / Math.PI;
+    playa_time_fractional = (12 + playa_time_fractional) % 12; // Grrr bad modulus
+
+    var playa_hours = Math.floor(playa_time_fractional);
+
+    var playa_minutes = Math.floor(
+      (playa_time_fractional - playa_hours) * 60
+    );
+
+    // Time ain't zero indexed, jerks.
+    var playa_hours_text;
+    if(playa_hours == 0){playa_hours_text = "12";} else {playa_hours_text = playa_hours;}
+
+    var playa_minutes_text;
+    if(playa_minutes < 10){playa_minutes_text = "0" + playa_minutes;} else {playa_minutes_text = playa_minutes;}
+
+    var playa_time = playa_hours_text + ":" + playa_minutes_text;
+    var street;
+
+    if(distance_in_feet < 20){
+      // too close to call for GPS, really
+      playa_time = "";
+    }
+    if(distance_in_feet < man_pavilion_size){
+      street = "at the Man";
+    } else if(distance_in_feet < esplanade_feet - esplanade_block_depth_feet){
+      street = "inner playa";
+    } else if(distance_in_feet < esplanade_feet) {
+      street = "inner playa near Esplanade";
+    } else if(distance_in_feet < esplanade_feet + street_width_feet + esplanade_block_depth_feet / 2) {
+      street = "Esplanade";
+    } else if(distance_in_feet < esplanade_feet + street_width_feet + esplanade_block_depth_feet + street_width_feet + block_depth_feet / 2) {
+      street = streets[0];
+    } else {
+      var distance_from_A = distance_in_feet - esplanade_feet - street_width_feet - esplanade_block_depth_feet + street_width_feet / 2;
+      var estimated_street_count = distance_from_A / (street_width_feet + block_depth_feet);
+      if(estimated_street_count < 26){
+        street = streets[Math.round(estimated_street_count)];
+      } else {
+        street = "the " + ordinal(Math.round(estimated_street_count + 1)) + " " + theme + " street";
+      }
+    }
+
+    var address = street;
+    if(playa_time != ""){
+      address = address + "<br>at " + playa_time;
+    }
+
+    var canvas = document.getElementById("playacanvas");
+    var context = canvas.getContext('2d');
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    var length = distance_in_feet * pixels_to_esplanade / esplanade_feet;
+    if(length > 240){ length = 240 ; }
+    var x = length * Math.cos(-angle);
+    var y = length * Math.sin(-angle);
+    context.beginPath();
+    context.moveTo(250,262);
+    context.lineTo(x + 250, y + 262);
+    context.lineWidth = 3;
+    context.strokeStyle = "red";
+    context.stroke();
+    if(facing_bearing){
+      context.beginPath();
+      context.moveTo(x + 250, y + 262);
+      var facing_compass_direction = (Math.PI / 2 ) - (facing_bearing * Math.PI / 180);
+
+      var facing_angle = facing_compass_direction + (Math.PI / 4);
+      var x1 = 40 * Math.cos(-facing_angle);
+      var y1 = 40 * Math.sin(-facing_angle);
+      context.lineTo(x + 250 + x1, y + 262 + y1);
+      context.lineWidth = 2;
+      context.strokeStyle = "blue";
+      context.stroke();
+    }
+
+  if(gps_error){
+    address = "No GPS data. Make sure your browser (safari?) has location services enabled."
+    }
+  document.getElementById("output_address").innerHTML = address;
+  }
+
+  function errorCallback(e){
+    gps_error = true;
+    show_address();
+  }
+
+  function successCallback(p){
+    gps_error = false;
+    lat = p.coords.latitude;
+    lon = p.coords.longitude;
+
+    show_address();
+  }
+
+  var watchid;
+
+  function startgeo() {
+    try {
+      watchid = navigator.geolocation.watchPosition(successCallback, errorCallback, {
+        maximumAge: 600000,
+      });
+    } catch(e) {
+    }
+  }
+
+  function startcompass(){
+    window.addEventListener("deviceorientation", function(event) {
+      if( facing_bearing != event.webkitCompassHeading){
+        facing_bearing = event.webkitCompassHeading;
+        show_address();
+      }
+    }, true);
+  }
+
+  function main(){
+    startcompass();
+    startgeo();
+  }
+
+  //]]>
+</script>
+</head>
+<body style="margin:auto;padding:0;width:500px;text-align:center" onload="main();">
+    <div style="text-align:center">
+      <div style='position:absolute;text-align:center;width:500px'>
+      <h1 id='output_address' style="font-family:Chalkduster;font-size:22pt;margin:1px;">Waiting for GPS data...</h1>
+    </div>
+      <img alt="" src="/playa-gps/littlemapbrc2013.png" width="500" height="585" style="position:absolute;z-index:-1">
+      <canvas width="500" height="585" id="playacanvas"></canvas>
+    </div>
+</html>
