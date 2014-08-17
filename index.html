@@ -3,7 +3,7 @@
   <head>
     <title>playa GPS</title>
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <link rel="apple-touch-icon" href="/playa-gps/2014-map.png" />
+    <link rel="apple-touch-icon" href="/playa-gps/2014-map-taller.png" />
     <meta name = "viewport" content = "user-scalable=no, width=500">
     <link rel="stylesheet" href="/playa-gps/add2home/add2home.css">
     <script type="application/javascript" src="/playa-gps/add2home/add2home.js"></script>
@@ -14,7 +14,10 @@
   var man_lat = 40.78880;
   var man_lon = -119.20315;
 
-  var pixels_to_esplanade = 91;
+  var man_x_pixel = 250;
+  var man_y_pixel = 292;
+
+  var pixels_to_esplanade = 90;
 
   var man_pavilion_size = 100; // radius. wild guess
   var esplanade_feet = 2400;
@@ -155,12 +158,12 @@
     var context = canvas.getContext('2d');
     context.clearRect(0, 0, canvas.width, canvas.height);
     var length = distance_in_feet * pixels_to_esplanade / esplanade_feet;
-    if(length > 240){ length = 240 ; }
+    if(length > canvas.height){ length = canvas.height ; }
     var x = length * Math.cos(-angle);
     var y = length * Math.sin(-angle);
     context.beginPath();
-    context.moveTo(250,176);
-    context.lineTo(x + 250, y + 262);
+    context.moveTo(man_x_pixel, man_y_pixel);
+    context.lineTo(x + man_x_pixel, y + man_y_pixel);
     context.lineWidth = 3;
     context.strokeStyle = "red";
     context.stroke();
@@ -193,7 +196,10 @@
     gps_error = false;
     lat = p.coords.latitude;
     lon = p.coords.longitude;
-
+    lon = -119.23241;
+    lat = 40.78542;
+    lon = -119.20772;
+    lat = 40.76678;
     show_address();
   }
 
@@ -230,7 +236,7 @@
       <div style='position:absolute;text-align:center;width:500px'>
       <h1 id='output_address' style="font-family:Chalkduster;font-size:22pt;margin:1px;">Waiting for GPS data...</h1>
     </div>
-      <img alt="" src="/playa-gps/2014-map.png" width="500" height="585" style="position:absolute;z-index:-1">
-      <canvas width="500" height="585" id="playacanvas"></canvas>
+      <img alt="" src="/playa-gps/2014-map-taller.png" width="500" height="700" style="position:absolute;z-index:-1">
+      <canvas width="500" height="700" id="playacanvas"></canvas>
     </div>
 </html>
