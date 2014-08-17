@@ -170,7 +170,7 @@
     context.stroke();
     if(facing_bearing){
       context.beginPath();
-      context.moveTo(x + 250, y + 262);
+      context.moveTo(x + man_x_pixel, y + man_y_pixel);
       var facing_compass_direction = (Math.PI / 2 ) - (facing_bearing * Math.PI / 180);
 
       var facing_angle = facing_compass_direction + (Math.PI / 4);
